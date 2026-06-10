@@ -1326,5 +1326,1027 @@ class _AnimatedCardState extends State<_AnimatedCard>
         ]
       }
     ]
+  },
+
+  // ─────────────────────────────────────────────
+  // Module 10: Android 开发
+  // ─────────────────────────────────────────────
+  {
+    id: "p10",
+    title: "Android 开发",
+    level: 10,
+    color: "#34d399",
+    builtin: true,
+    topics: [
+      {
+        id: "android-basics",
+        title: "Android 基础架构",
+        items: [
+          {
+            id: "p10-basics-q1",
+            type: "quiz",
+            question: "Android 应用的四大组件是什么？",
+            options: [
+              "Activity、Fragment、ViewModel、LiveData",
+              "Activity、Service、BroadcastReceiver、ContentProvider",
+              "Application、Activity、Fragment、Layout",
+              "Context、Intent、Bundle、Handler"
+            ],
+            answer: 1,
+            explain:
+              "Android 四大组件是 Activity（界面）、Service（后台服务）、BroadcastReceiver（广播接收器）和 ContentProvider（内容提供者）。每个组件都需要在 AndroidManifest.xml 中声明。Fragment 不是四大组件，它是 Activity 的一个片段；ViewModel 和 LiveData 是 Jetpack 架构组件。"
+          },
+          {
+            id: "p10-basics-q2",
+            type: "quiz",
+            question: "关于 Android 的 Intent，以下说法正确的是？",
+            options: [
+              "显式 Intent 只能用于启动 Service，隐式 Intent 只能用于启动 Activity",
+              "显式 Intent 指定了目标组件的完整类名，隐式 Intent 通过 action/category/data 等过滤条件让系统匹配合适的组件",
+              "隐式 Intent 比显式 Intent 更安全，因为它不暴露类名",
+              "Intent 只能携带基本类型的数据，不能传递 Parcelable 对象"
+            ],
+            answer: 1,
+            explain:
+              "显式 Intent 通过 setClass/setComponent 明确指定要启动的组件，通常用于应用内部跳转；隐式 Intent 通过 action、category、data 等声明需要的操作类型，由系统通过 IntentFilter 匹配最合适的组件，常用于跨应用调用（如打开网页、分享内容）。隐式 Intent 由于需要系统解析，可能存在安全风险（如 Intent 劫持），应谨慎处理。Intent 可以通过 Bundle 携带基本类型、Parcelable 和 Serializable 对象。"
+          },
+          {
+            id: "p10-basics-c1",
+            type: "code",
+            question: "以下 Activity 代码在旋转屏幕后数据丢失，请找出原因：",
+            code: `public class MainActivity extends AppCompatActivity {
+    private int counter = 0;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        counter++;
+        TextView tv = findViewById(R.id.counter_text);
+        tv.setText("Count: " + counter);
+    }
+}`,
+            options: [
+              "TextView 的 setText 方法不支持整数类型",
+              "屏幕旋转会导致 Activity 重建，onCreate 重新执行，counter 被重置为 0，且没有在 onSaveInstanceState 中保存 counter 的值",
+              "findViewById 返回 null 导致空指针",
+              "counter 应该声明为 static"
+            ],
+            answer: 1,
+            explain:
+              "屏幕旋转是配置变更（Configuration Change）的一种，默认行为是销毁并重建 Activity。重建后 counter 重新初始化为 0。正确做法：(1) 在 onSaveInstanceState 中保存 counter 值，在 onCreate 中从 savedInstanceState 恢复；(2) 或使用 ViewModel（Jetpack），ViewModel 可以在配置变更时存活；(3) 或在 Manifest 中为 Activity 添加 android:configChanges=\"orientation|screenSize\" 阻止重建（不推荐）。"
+          },
+          {
+            id: "p10-basics-t1",
+            type: "task",
+            question: "实现一个完整的 Activity 生命周期观察器",
+            desc: "创建一个包含两个 Activity 的应用，在所有生命周期回调中添加日志输出（onCreate、onStart、onResume、onPause、onStop、onDestroy、onRestart）。通过以下操作观察生命周期变化：(1) 启动应用；(2) 按 Home 键；(3) 从最近任务返回；(4) 启动第二个 Activity；(5) 从第二个 Activity 返回；(6) 旋转屏幕；(7) 按返回键退出。将观察到的生命周期顺序记录下来并解释每个回调的含义。",
+            criteria: [
+              "所有 7 个生命周期回调都有日志输出",
+              "6 种操作场景的日志输出顺序正确",
+              "理解各回调的含义（如 onCreate 只调用一次 vs onStart 每次可见都调用）",
+              "能解释屏幕旋转时的完整生命周期流程"
+            ]
+          },
+          {
+            id: "p10-basics-o1",
+            type: "open",
+            question: "请解释 Android 中 Context 的概念。Activity、Application 和 Service 的 Context 有什么区别？在什么场景下应该使用哪种 Context？使用错误的 Context 会导致什么问题？",
+            ref: "Context 是 Android 中访问系统资源和类的接口，几乎所有组件操作都需要 Context。\n\n**Activity Context**：\n- 生命周期与 Activity 绑定\n- 可以显示 Dialog、启动 Activity、注册 BroadcastReceiver 等\n- 适合与 UI 相关的操作（如 LayoutInflater、Dialog）\n- 泄漏风险：如果长生命周期的对象（如 Singleton、Static 变量）持有 Activity Context，会导致 Activity 无法被 GC 回收\n\n**Application Context**：\n- 生命周期与整个应用绑定\n- 不能显示 Dialog、不能启动带 UI 的 Activity（除非加 FLAG_ACTIVITY_NEW_TASK）\n- 适合长生命周期的操作（如数据库初始化、全局单例）\n- 不会导致 Activity 泄漏\n\n**Service Context**：\n- 生命周期与 Service 绑定\n- 功能介于 Activity 和 Application 之间\n\n**使用原则**：\n- UI 相关操作用 Activity Context\n- 长生命周期对象用 Application Context\n- 使用弱引用或 Lifecycle-aware 回调避免泄漏\n- 常见泄漏场景：Handler 持有 Activity、内部类持有外部类引用、单例持有 Context"
+          }
+        ]
+      },
+      {
+        id: "android-layout",
+        title: "布局与 UI",
+        items: [
+          {
+            id: "p10-layout-q1",
+            type: "quiz",
+            question: "在 Android 中，ConstraintLayout 相比 LinearLayout 的主要优势是什么？",
+            options: [
+              "ConstraintLayout 的语法更简洁，代码量更少",
+              "ConstraintLayout 可以通过约束关系实现扁平化布局，减少嵌套层级，从而提升布局性能",
+              "ConstraintLayout 支持的 View 类型更多",
+              "ConstraintLayout 自动处理所有动画效果"
+            ],
+            answer: 1,
+            explain:
+              "ConstraintLayout 的核心优势是减少布局嵌套。传统的 LinearLayout 嵌套会导致 View 层级过深，多次 measure/layout 传递影响性能。ConstraintLayout 通过约束（constraint）让每个 View 与其他 View 或父容器建立关系，实现扁平化布局（通常只需一层）。它支持链（Chain）、屏障（Barrier）、引导线（Guideline）等高级特性，可以替代大多数嵌套布局。性能测试表明，扁平的 ConstraintLayout 比多层嵌套的 LinearLayout 在 measure 阶段快约 40%。"
+          },
+          {
+            id: "p10-layout-q2",
+            type: "quiz",
+            question: "RecyclerView 相比 ListView 的核心改进是什么？",
+            options: [
+              "RecyclerView 只能显示垂直列表，ListView 可以显示网格",
+              "RecyclerView 强制使用 ViewHolder 模式，将布局管理（LayoutManager）和项目装饰（ItemDecoration）解耦，并且内置动画支持",
+              "RecyclerView 的适配器更简单，代码量更少",
+              "RecyclerView 不需要编写 Adapter，自动绑定数据"
+            ],
+            answer: 1,
+            explain:
+              "RecyclerView 的核心改进：(1) 强制 ViewHolder 模式 — ListView 的 ViewHolder 是可选优化，RecyclerView 在 Adapter 中强制实现；(2) LayoutManager 解耦 — 支持 LinearLayoutManager、GridLayoutManager、StaggeredGridLayoutManager，而 ListView 只支持垂直列表；(3) ItemDecoration — 自定义分割线和装饰；(4) ItemAnimator — 内置增删改动画；(5) DiffUtil — 高效计算数据差异并更新。RecyclerView 的 API 更复杂但更灵活，是现代 Android 列表的标准方案。"
+          },
+          {
+            id: "p10-layout-c1",
+            type: "code",
+            question: "以下 RecyclerView Adapter 代码存在性能问题，滚动时出现卡顿，请找出原因：",
+            code: `public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyHolder> {
+    private List<String> data;
+
+    @Override
+    public void onBindViewHolder(@NonNull MyHolder holder, int position) {
+        String item = data.get(position);
+        // 每次绑定都加载图片
+        Bitmap bmp = BitmapFactory.decodeFile(item);
+        holder.imageView.setImageBitmap(bmp);
+        // 每次绑定都创建新的监听器
+        holder.itemView.setOnClickListener(v -> {
+            new AlertDialog.Builder(v.getContext())
+                .setTitle(item)
+                .show();
+        });
+    }
+
+    // ... 省略其他方法
+}`,
+            options: [
+              "onBindViewHolder 中不应该设置点击事件",
+              "在 onBindViewHolder 中进行同步的图片解码（阻塞 UI 线程）且每次都创建新的 OnClickListener 对象",
+              "RecyclerView Adapter 不支持 String 类型的数据",
+              "BitmapFactory 应该使用 decodeResource 而非 decodeFile"
+            ],
+            answer: 1,
+            explain:
+              "代码存在两个主要问题：(1) **同步图片解码** — BitmapFactory.decodeFile 是同步 I/O 操作，在 onBindViewHolder 中执行会直接阻塞 UI 线程，导致滚动卡顿。应使用 Glide/Coil 等异步图片加载库。(2) **重复创建监听器** — 每次绑定都 new 一个 OnClickListener 和 AlertDialog.Builder，在快速滚动时会创建大量临时对象，增加 GC 压力。应在 onCreateViewHolder 中设置监听器，或在 ViewHolder 中复用监听器并通过 adapterPosition 获取当前位置。"
+          },
+          {
+            id: "p10-layout-t1",
+            type: "task",
+            question: "实现一个多类型 RecyclerView 列表",
+            desc: "实现一个类似微信朋友圈的动态列表，支持多种 Item 类型：(1) 纯文字动态；(2) 图片动态（单图、三图、九宫格）；(3) 视频动态（缩略图 + 播放按钮）。要求使用 sealed class 或多 ViewType 实现，使用 Glide 或 Coil 加载图片，支持下拉刷新和分页加载，Item 点击和长按有不同的交互（点击进入详情、长按弹出菜单）。",
+            criteria: [
+              "正确使用 getItemViewType 和多 ViewHolder 实现多类型列表",
+              "图片加载使用异步库（Glide/Coil），列表中显示 placeholder",
+              "下拉刷新（SwipeRefreshLayout）和分页加载正常工作",
+              "点击和长按事件正确区分并响应",
+              "列表滚动流畅，无明显卡顿"
+            ]
+          }
+        ]
+      },
+      {
+        id: "android-jetpack",
+        title: "Jetpack 架构组件",
+        items: [
+          {
+            id: "p10-jetpack-q1",
+            type: "quiz",
+            question: "ViewModel 在 Android 架构中的核心作用是什么？",
+            options: [
+              "ViewModel 负责所有的网络请求和数据解析",
+              "ViewModel 在配置变更（如屏幕旋转）时存活，用于持有和管理与 UI 相关的数据，避免因 Activity 重建而丢失状态",
+              "ViewModel 替代了 Activity 的所有功能",
+              "ViewModel 是一种新的布局容器"
+            ],
+            answer: 1,
+            explain:
+              "ViewModel 的核心价值是「配置变更时存活」。当 Activity 因屏幕旋转等配置变更而重建时，ViewModel 不会被销毁（它存储在 ViewModelStore 中），新 Activity 可以获取同一个 ViewModel 实例，从而保留之前的数据和状态。这解决了传统方案中 onSaveInstanceState 的限制（只能保存少量可序列化数据）和静态变量方案的问题（无法正确处理多实例）。ViewModel 不应持有 View、Activity Context 或 Lifecycle 相关的引用，否则会导致内存泄漏。"
+          },
+          {
+            id: "p10-jetpack-q2",
+            type: "quiz",
+            question: "关于 Kotlin Flow 和 LiveData，以下说法正确的是？",
+            options: [
+              "LiveData 完全可以替代 Flow，两者功能一样",
+              "Flow 是 Kotlin 协程的响应式流，支持冷流/热流、背压处理、丰富的操作符；LiveData 是 Android 生命周期感知的观察者，适合简单的 UI 状态观察，但操作符有限",
+              "Flow 只能在 ViewModel 中使用，LiveData 只能在 Activity 中使用",
+              "LiveData 的性能一定比 Flow 好"
+            ],
+            answer: 1,
+            explain:
+              "LiveData 是 Android 架构组件，核心优势是生命周期感知（自动在 onStart 后开始观察、onStop 后暂停、onDestroy 后移除），适合简单的 UI 状态更新。但 LiveData 缺少丰富的数据变换操作符（map/switchMap 有限），不支持背压，一次只持有一个值。Flow 是 Kotlin 协程生态的一部分，支持冷流（每次收集重新执行）和热流（SharedFlow/StateFlow），有丰富的操作符（map、filter、flatMapLatest、debounce 等），支持背压处理，可以表示数据流（如数据库变更、WebSocket 消息）。推荐做法：数据层使用 Flow，UI 层通过 asLiveData() 或 collectAsStateWithLifecycle() 桥接。"
+          },
+          {
+            id: "p10-jetpack-c1",
+            type: "code",
+            question: "以下 ViewModel 代码可能导致内存泄漏，请找出原因：",
+            code: `class UserViewModel(private val userRepository: UserRepository) : ViewModel() {
+    private val _userData = MutableLiveData<User>()
+    val userData: LiveData<User> = _userData
+
+    fun loadUser(userId: String) {
+        viewModelScope.launch {
+            val result = userRepository.getUser(userId)
+            _userData.value = result
+        }
+    }
+
+    // 添加一个全局监听器
+    init {
+        GlobalScope.launch(Dispatchers.Main) {
+            eventBus.events.collect { event ->
+                _userData.value = userRepository.handleEvent(event)
+            }
+        }
+    }
+}`,
+            options: [
+              "viewModelScope.launch 不应该在 ViewModel 中使用",
+              "在 init 块中使用 GlobalScope 启动协程，该协程不受 ViewModel 生命周期管理，ViewModel 销毁后协程仍在运行并可能持有 ViewModel 引用",
+              "MutableLiveData 不能在 ViewModel 中使用",
+              "userRepository 不应该作为构造函数参数"
+            ],
+            answer: 1,
+            explain:
+              "GlobalScope 启动的协程生命周期与整个应用相同，不会因 ViewModel 的 onCleared() 而自动取消。当 Activity/Fragment 销毁且 ViewModel 被清理时，GlobalScope 协程仍在运行，且它的 lambda 捕获了 _userData 和 userRepository 引用（间接持有 ViewModel），导致 ViewModel 无法被 GC 回收。正确做法：使用 viewModelScope.launch（自动在 onCleared 时取消），或者在 onCleared 中手动取消 Job。viewModelScope.launch 是推荐的 ViewModel 协程用法。"
+          },
+          {
+            id: "p10-jetpack-t1",
+            type: "task",
+            question: "使用 MVVM + Repository 模式实现一个功能模块",
+            desc: "为一个「电影列表」功能实现完整的 MVVM 架构：(1) Movie 数据类（id, title, posterUrl, rating, overview）；(2) MovieRepository（协调 RemoteDataSource 和 LocalDataSource，实现缓存策略）；(3) MovieViewModel（使用 StateFlow 管理页面状态：Idle/Loading/Success/Error，支持刷新和分页）；(4) MovieListActivity/Fragment（观察 StateFlow 并渲染 UI）；(5) 使用 Hilt 或手动依赖注入。要求所有异步操作使用 Kotlin 协程。",
+            criteria: [
+              "分层清晰：UI → ViewModel → Repository → DataSource",
+              "StateFlow 正确管理 4 种状态（Idle/Loading/Success/Error）",
+              "下拉刷新和分页加载正确实现",
+              "协程在 viewModelScope 中启动，不会泄漏",
+              "依赖注入正确配置（Hilt 或手动）"
+            ]
+          },
+          {
+            id: "p10-jetpack-o1",
+            type: "open",
+            question: "请对比 Android 中 MVI 和 MVVM 架构模式的区别。MVI 的「单向数据流」是什么意思？在什么场景下 MVI 比 MVVM 更合适？",
+            ref: "**MVVM（Model-View-ViewModel）**：\n- ViewModel 暴露多个 LiveData/StateFlow 供 View 观察\n- View 可以调用 ViewModel 的多个方法触发状态更新\n- 状态可以是分散的（多个流分别管理不同数据）\n- 优点：灵活、直观、与 Jetpack 组件配合好\n- 缺点：多流可能导致状态不一致（如 isLoading=true 但 data=null 的中间态）\n\n**MVI（Model-View-Intent）**：\n- 单一状态：整个页面用一个 UiState 类描述所有可能的 UI 状态\n- 单向数据流：Intent（用户操作/系统事件）→ ViewModel 处理 → 更新 UiState → View 渲染\n- Intent 不是 Android 的 Intent 类，而是表示「用户意图」的 sealed class\n- 优点：状态可预测（不可能出现不一致）、便于调试和测试、方便添加中间件（日志/分析）\n- 缺点：样板代码较多（大量 sealed class 定义）、所有状态变化都要创建新 UiState 对象\n\n**单向数据流**：\n1. View 发出 Intent（如 UserClickRefresh）\n2. ViewModel 接收 Intent，执行业务逻辑\n3. ViewModel 生成新的 UiState\n4. View 观察到新 UiState 并渲染\n\n数据流方向是单向的（View → Intent → ViewModel → State → View），不存在反向依赖，使状态变化可追踪。\n\n**MVI 更合适的场景**：\n- 复杂页面，状态组合多（如表单、多步骤流程）\n- 需要精确的调试和日志追踪\n- 需要状态回放/撤销功能\n- 多人协作时需要严格的状态管理规范"
+          }
+        ]
+      },
+      {
+        id: "android-concurrency",
+        title: "协程与并发",
+        items: [
+          {
+            id: "p10-conc-q1",
+            type: "quiz",
+            question: "Kotlin 协程中 `suspend` 关键字的作用是什么？",
+            options: [
+              "suspend 让函数在新的线程上执行",
+              "suspend 标记一个函数为可挂起函数，表示该函数可以在不阻塞线程的情况下暂停执行并在稍后恢复",
+              "suspend 让函数执行速度更快",
+              "suspend 只能在 Activity 中使用"
+            ],
+            answer: 1,
+            explain:
+              "suspend 关键字标记的函数称为挂起函数（suspend function），它可以在执行过程中被挂起（暂停）而不阻塞当前线程，在条件满足后恢复执行。挂起函数只能在协程中或其他挂起函数中调用。常见的挂起函数包括 delay()、withContext()、await()、网络请求、数据库操作等。suspend 本身并不指定函数在哪个线程执行，线程切换需要通过 withContext(Dispatchers.IO) 等方式实现。"
+          },
+          {
+            id: "p10-conc-q2",
+            type: "quiz",
+            question: "关于协程的 Dispatchers，以下说法正确的是？",
+            options: [
+              "Dispatchers.Main 用于执行 CPU 密集型计算",
+              "Dispatchers.IO 用于网络请求、文件读写等 I/O 操作，Dispatchers.Default 用于 CPU 密集型计算（如排序、解析），Dispatchers.Main 用于 UI 更新",
+              "所有协程都应该使用 Dispatchers.IO",
+              "Dispatchers 是可选的，协程会自动选择最优线程"
+            ],
+            answer: 1,
+            explain:
+              "Dispatchers 决定协程在哪个线程/线程池上执行：\n- Dispatchers.Main：主线程（UI 线程），用于 UI 更新和轻量级操作\n- Dispatchers.IO：优化的 I/O 线程池（默认 64 个线程），用于网络请求、文件读写、数据库操作\n- Dispatchers.Default：优化的计算线程池（线程数 = CPU 核心数，最少 2），用于排序、解析、图片处理等 CPU 密集型任务\n- Dispatchers.Unconfined：不限定线程，在调用者线程启动，挂起后在恢复者线程继续\n\n选择原则：I/O 操作用 IO，计算用 Default，UI 操作用 Main。"
+          },
+          {
+            id: "p10-conc-c1",
+            type: "code",
+            question: "以下代码在主线程上执行了耗时操作导致 ANR，请找出问题：",
+            code: `class MyViewModel : ViewModel() {
+    private val _result = MutableStateFlow<String?>(null)
+    val result: StateFlow<String?> = _result
+
+    fun fetchData() {
+        viewModelScope.launch {
+            // 直接在 Main 调度器上执行耗时网络请求
+            val response = apiService.getData()
+            val parsed = parseLargeJson(response.body()!!)
+            _result.value = parsed
+        }
+    }
+
+    private fun parseLargeJson(json: String): String {
+        // 大量 JSON 解析逻辑...
+        return json.substring(0, 100)
+    }
+}`,
+            options: [
+              "viewModelScope 不能用于网络请求",
+              "apiService.getData() 和 parseLargeJson() 在主线程（Dispatchers.Main）上执行，网络请求和大量解析会阻塞主线程导致 ANR",
+              "StateFlow 不能在 ViewModel 中使用",
+              "substring 方法会导致 ANR"
+            ],
+            answer: 1,
+            explain:
+              "viewModelScope 默认使用 Dispatchers.Main，因此 launch 块中的代码默认在主线程执行。apiService.getData() 如果不是 suspend 函数（如使用 Retrofit 但未声明 suspend），则会在主线程同步执行网络请求，直接导致 ANR。即使 getData() 是 suspend 函数，parseLargeJson() 作为非 suspend 的 CPU 密集操作仍会在主线程执行。修复方法：(1) 确保 apiService 方法声明为 suspend（Retrofit 会自动切换到 IO 线程）；(2) 将 parseLargeJson 用 withContext(Dispatchers.Default) 包裹，将 CPU 密集操作移到 Default 线程池。"
+          },
+          {
+            id: "p10-conc-t1",
+            type: "task",
+            question: "实现一个带超时和重试的协程网络请求封装",
+            desc: "封装一个通用的网络请求函数 safeApiCall，支持：(1) 超时控制（withTimeout，可配置超时时间）；(2) 自动重试（retry，可配置重试次数和延迟）；(3) 统一的错误处理（网络错误、超时、HTTP 错误码、JSON 解析错误）；(4) 使用 sealed class 定义结果类型 ApiResult< T >（Success / Error / Loading）；(5) 在 ViewModel 中使用该封装发起请求并更新 UI 状态。",
+            criteria: [
+              "withTimeout 正确使用，超时后取消协程并返回 Error",
+              "重试逻辑正确（指数退避或固定延迟），重试耗尽后返回最终错误",
+              "sealed class Result 覆盖所有可能的错误类型",
+              "safeApiCall 可以在任何 viewModelScope.launch 中使用",
+              "代码可复用，不与特定业务逻辑耦合"
+            ]
+          },
+          {
+            id: "p10-conc-o1",
+            type: "open",
+            question: "请解释 Kotlin 协程中 Structured Concurrency（结构化并发）的概念。为什么说协程比 RxJava 更安全？什么是协程泄漏，如何避免？",
+            ref: "**结构化并发**是 Kotlin 协程的核心设计原则，要求：\n\n1. **父子关系**：每个协程都有一个父协程（通过 CoroutineScope 或 Job 建立）\n2. **生命周期绑定**：子协程的生命周期不能超过父协程\n3. **级联取消**：取消父协程时，所有子协程也会被取消\n4. **异常传播**：子协程的失败会传播给父协程\n\n**与 RxJava 对比**：\n- RxJava 的 Disposable 需要手动管理（在 onCreate 订阅、onDestroy 取消），容易遗漏导致泄漏\n- 协程通过 scope（如 viewModelScope）自动管理生命周期，scope 取消时所有子协程自动取消\n- 协程的异常传播机制更完善，未捕获的异常会向上传播而非静默丢失\n\n**协程泄漏**：\n当协程在其作用域被取消后仍在运行（通常因为使用了 GlobalScope 或手动创建了不绑定的 Job），导致协程持有外部引用无法被 GC 回收。\n\n**避免方法**：\n1. 永远不要使用 GlobalScope（除非明确知道后果）\n2. 使用 viewModelScope、lifecycleScope 等绑定了生命周期的 scope\n3. 自定义 scope 时确保在合适的生命周期回调中 cancel\n4. 使用 withContext 切换线程而非手动创建新协程\n5. 在 onCleared / onDestroy 中确保所有协程被取消"
+          }
+        ]
+      },
+      {
+        id: "android-storage",
+        title: "数据存储",
+        items: [
+          {
+            id: "p10-store-q1",
+            type: "quiz",
+            question: "Android 中以下数据存储方案，哪个适合存储大量结构化数据并支持复杂查询？",
+            options: [
+              "SharedPreferences / DataStore（Preferences）",
+              "Room（SQLite 封装）",
+              "文件存储（Internal/External Storage）",
+              "ContentProvider"
+            ],
+            answer: 1,
+            explain:
+              "Room 是 Android Jetpack 提供的 SQLite 封装库，适合存储大量结构化数据（如聊天记录、商品列表、订单数据），支持 SQL 查询、事务、类型安全、迁移和 Flow/LiveData 观察。SharedPreferences/DataStore 适合少量键值对（如用户偏好、设置）；文件存储适合二进制文件（如图片、PDF）；ContentProvider 主要用于跨应用数据共享。Room 的核心优势是编译时 SQL 验证、类型安全的 DAO 接口、自动迁移支持和与协程/Flow 的深度集成。"
+          },
+          {
+            id: "p10-store-c1",
+            type: "code",
+            question: "以下 Room DAO 代码在主线程执行时报错，请找出原因：",
+            code: `@Dao
+interface UserDao {
+    @Query("SELECT * FROM users WHERE id = :userId")
+    fun getUser(userId: String): User
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertUser(user: User)
+
+    @Query("SELECT * FROM users")
+    fun getAllUsers(): List<User>
+}`,
+            options: [
+              "Room DAO 不支持 String 类型的主键",
+              "DAO 方法返回同步结果（非 Flow/LiveData），Room 默认禁止在主线程执行数据库操作，应改为 suspend 函数或返回 Flow/LiveData",
+              "SQL 语法有错误",
+              "onConflict 参数不应该使用 REPLACE"
+            ],
+            answer: 1,
+            explain:
+              "Room 默认禁止在主线程执行数据库操作（防止 ANR），同步的 DAO 方法（返回 User、List<User> 等直接类型）不能在主线程调用。修复方式：(1) 将方法声明为 suspend 函数：`suspend fun getUser(userId: String): User`，然后在协程中调用；(2) 返回 Flow 或 LiveData 实现异步观察：`fun getAllUsers(): Flow<List<User>>`。推荐使用 suspend + Flow 组合：一次性查询用 suspend，持续观察用 Flow。"
+          },
+          {
+            id: "p10-store-t1",
+            type: "task",
+            question: "使用 Room 实现一个本地缓存层",
+            desc: "为一个新闻阅读 App 实现 Room 本地缓存：(1) Entity（NewsArticle，含 id, title, content, author, publishedAt, isBookmarked, categoryId）；(2) Dao（包含按分类查询、搜索标题、分页加载、收藏操作）；(3) Database 和 TypeConverter（Date ↔ Long）；(4) Repository（实现网络优先策略：先返回本地缓存，同时拉取远程数据更新本地，Flow 自动推送更新）；(5) 数据库迁移（v1→v2 添加 isBookmarked 字段）。",
+            criteria: [
+              "Entity 和 TypeConverter 正确定义",
+              "DAO 方法支持分页（PagingSource 或 LIMIT/OFFSET）和搜索",
+              "Repository 的网络优先策略正确实现（先返回缓存，异步更新）",
+              "Flow 观察本地数据变化自动通知 UI",
+              "数据库迁移脚本正确编写并在测试中验证"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+
+  // ─────────────────────────────────────────────
+  // Module 11: Android 进阶
+  // ─────────────────────────────────────────────
+  {
+    id: "p11",
+    title: "Android 进阶",
+    level: 11,
+    color: "#10b981",
+    builtin: true,
+    topics: [
+      {
+        id: "android-perf",
+        title: "性能优化",
+        items: [
+          {
+            id: "p11-perf-q1",
+            type: "quiz",
+            question: "Android 中内存泄漏（Memory Leak）和内存溢出（OOM）的区别是什么？",
+            options: [
+              "内存泄漏和内存溢出是同一个概念",
+              "内存泄漏是对象不再使用但无法被 GC 回收（如长生命周期对象持有短生命周期引用），导致可用内存逐渐减少；内存溢出是应用申请的内存超出了系统分配的上限",
+              "内存泄漏只会发生在 C/C++ 代码中，Java/Kotlin 不会有内存泄漏",
+              "内存溢出可以通过重启 Activity 解决，内存泄漏不能"
+            ],
+            answer: 1,
+            explain:
+              "内存泄漏（Memory Leak）：对象不再被使用，但因为仍然被其他存活对象引用（如静态变量、单例、未取消的注册、内部类隐式引用等），GC 无法回收，导致内存逐渐被占满。内存溢出（OOM）：应用尝试分配内存但堆空间不足，抛出 OutOfMemoryError。内存泄漏是 OOM 的常见原因——多次泄漏累积后可用内存越来越少，最终触发 OOM。排查工具：LeakCanary（自动检测泄漏）、Android Studio Memory Profiler（堆转储分析）、MAT（Memory Analyzer Tool）。"
+          },
+          {
+            id: "p11-perf-q2",
+            type: "quiz",
+            question: "关于 Android 启动优化，以下说法正确的是？",
+            options: [
+              "冷启动和热启动的时间完全相同",
+              "冷启动时应在 Application.onCreate 和首个 Activity.onCreate 中尽可能多地初始化所有第三方库，避免延迟加载",
+              "冷启动是进程不存在的完整启动，应通过延迟初始化、异步初始化、任务拓扑排序等策略减少主线程阻塞时间；热启动是 Activity 从后台恢复，无需重新创建",
+              "启动优化只影响用户体验，不影响应用的 Google Play 排名"
+            ],
+            answer: 2,
+            explain:
+              "冷启动（Cold Start）：应用进程不存在，需要创建进程→初始化 Application→创建首个 Activity→布局渲染。这是最慢的启动路径，也是优化的重点。热启动（Warm/Hot Start）：Activity 已在后台（ onStop/onPause 状态），直接恢复即可，速度很快。冷启动优化策略：(1) 延迟初始化——非必要库不在 Application.onCreate 中初始化；(2) 异步初始化——无依赖关系的库在子线程初始化；(3) 任务拓扑排序——使用有向无环图（DAG）管理初始化任务的依赖关系；(4) 闪屏优化——使用 windowBackground 设置启动主题，避免白屏。工具：Macrobenchmark、Systrace。"
+          },
+          {
+            id: "p11-perf-c1",
+            type: "code",
+            question: "以下代码存在内存泄漏风险，请找出所有泄漏点：",
+            code: `class MainActivity : AppCompatActivity() {
+    private val handler = Handler(Looper.getMainLooper())
+    private var heavyObject: Bitmap? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        heavyObject = BitmapFactory.decodeResource(resources, R.drawable.huge_image)
+        
+        // 延迟任务
+        handler.postDelayed({
+            // 使用 Activity 引用更新 UI
+            findViewById<TextView>(R.id.tv).text = "Updated"
+        }, 60_000)
+
+        // 注册广播
+        registerReceiver(object : BroadcastReceiver() {
+            override fun onReceive(ctx: Context, intent: Intent) {
+                Toast.makeText(this@MainActivity, "Received", Toast.LENGTH_SHORT).show()
+            }
+        }, IntentFilter("com.example.ACTION"))
+    }
+}`,
+            options: [
+              "代码没有内存泄漏问题，GC 会自动处理",
+              "存在多个泄漏点：(1) Handler 的 Runnable 隐式持有 Activity 引用，Activity 销毁后 Runnable 仍在消息队列中；(2) BroadcastReceiver 注册但未在 onDestroy 中反注册；(3) heavyObject 大图未在 onDestroy 中回收",
+              "只有 BroadcastReceiver 的泄漏，其他都不是问题",
+              "Bitmap 不会导致内存泄漏，因为它会被自动回收"
+            ],
+            answer: 1,
+            explain:
+              "三个泄漏点：(1) **Handler 泄漏** — postDelayed 的 lambda 隐式捕获了 Activity 引用（通过 findViewById 和 this@MainActivity），即使 Activity 销毁，Runnable 仍在主线程消息队列中等待 60 秒后执行，期间 Activity 无法被 GC。修复：使用 WeakReference 或在 onDestroy 中 removeCallbacksAndMessages(null)。(2) **BroadcastReceiver 泄漏** — 动态注册的 Receiver 未在 onDestroy 中调用 unregisterReceiver()，系统持有 Receiver 引用进而持有 Activity。修复：保存 Receiver 引用并在 onDestroy 反注册。(3) **Bitmap 泄漏** — 大图对象在 Activity 销毁后如果没有被释放，会持续占用大量堆内存。修复：在 onDestroy 中 recycle() 并置 null。"
+          },
+          {
+            id: "p11-perf-t1",
+            type: "task",
+            question: "实现一个启动优化方案",
+            desc: "为一个中型应用实现启动优化：(1) 使用 Systrace 或 Macrobenchmark 测量优化前的冷启动时间（从进程创建到首帧渲染）；(2) 将 Application.onCreate 中的第三方库初始化按依赖关系构建 DAG，分为必须同步初始化（如 CrashSDK）和可异步初始化（如统计SDK、图片库）；(3) 实现一个简单的任务调度器 TaskDispatcher，支持依赖声明、线程池执行、回调通知；(4) 优化首个 Activity 的布局层级（减少嵌套、使用 ViewStub 延迟加载）；(5) 测量优化后的启动时间并对比。",
+            criteria: [
+              "优化前后的冷启动时间有量化对比（如从 2s 降到 800ms）",
+              "TaskDispatcher 正确处理任务依赖关系（拓扑排序）",
+              "同步/异步初始化任务划分合理",
+              "布局优化后层级深度减少",
+              "使用 Systrace 或 Profiler 验证主线程阻塞减少"
+            ]
+          },
+          {
+            id: "p11-perf-o1",
+            type: "open",
+            question: "请详细描述 Android 应用的卡顿（Jank）优化方案。包括：如何定义和检测卡顿、常见的卡顿原因、优化手段，以及如何建立线上卡顿监控体系。",
+            ref: "**卡顿定义**：单帧渲染时间超过 16.67ms（60fps）或 8.33ms（120fps），导致画面不连续。\n\n**检测方法**：\n1. **开发者选项 → Profile GPU Rendering**：实时查看每帧耗时\n2. **Systrace / Perfetto**：系统级 trace 分析，定位具体耗时函数\n3. **Choreographer.FrameCallback**：代码层面检测掉帧\n4. **Android Studio CPU Profiler**：方法级耗时分析\n\n**常见卡顿原因**：\n1. **主线程 I/O**：文件读写、SharedPreferences 同步提交、数据库查询\n2. **布局复杂**：View 层级过深、过度绘制（Overdraw）\n3. **频繁 GC**：循环中创建大量临时对象（如 String 拼接、auto-boxing）\n4. **图片加载**：未降采样的大图解码、主线程 Bitmap 操作\n5. **动画卡顿**：硬件层未启用、属性动画在 onDraw 中触发\n\n**优化手段**：\n1. 主线程只做 UI 操作，I/O 和计算移到子线程\n2. 减少布局层级（ConstraintLayout 扁平化、ViewStub 延迟加载、Merge 减少冗余节点）\n3. 减少对象分配（对象池、ArrayMap 替代 HashMap、避免 auto-boxing）\n4. 图片降采样 + 异步解码 + 缓存\n5. 列表优化（DiffUtil、ViewHolder 复用、setHasFixedSize）\n6. 使用 hardware layer 加速动画\n\n**线上监控**：\n1. Looper 的 Printer 方案：在主线程 Looper 的 dispatchMessage 前后打点，计算耗时\n2. Choreographer 方案：注册 FrameCallback 统计掉帧率\n3. ArgusAPM / Matrix 等开源 APM 框架\n4. 上报指标：FPS、掉帧率、卡顿堆栈、卡顿时长\n5. 采样策略：不是每帧都采集，而是检测到掉帧后采集调用栈"
+          }
+        ]
+      },
+      {
+        id: "android-custom-view",
+        title: "自定义 View",
+        items: [
+          {
+            id: "p11-view-q1",
+            type: "quiz",
+            question: "自定义 View 时，`onMeasure()`、`onLayout()` 和 `onDraw()` 的执行顺序和职责分别是什么？",
+            options: [
+              "onDraw → onMeasure → onLayout，先绘制再测量再布局",
+              "onMeasure → onLayout → onDraw，先测量确定大小，再布局确定位置，最后绘制内容",
+              "onLayout → onMeasure → onDraw，顺序不影响结果",
+              "只有 onDraw 是必须重写的，其他两个可选"
+            ],
+            answer: 1,
+            explain:
+              "View 的三大流程严格按 measure → layout → draw 顺序执行：\n(1) onMeasure：测量 View 的大小。根据父容器传递的 MeasureSpec（EXACTLY/AT_MOST/UNSPECIFIED）计算自身宽高，调用 setMeasuredDimension 保存。自定义 View 必须处理 wrap_content 场景，否则会与 match_parent 表现一致。\n(2) onLayout：确定 View 的位置。只有 ViewGroup 需要重写，遍历子 View 调用 layout() 指定上下左右位置。单个 View 不需要。\n(3) onDraw：绘制 View 的内容。使用 Canvas 和 Paint 绘制图形、文字、图片等。仅在需要自定义视觉效果时重写。\n\n注意：View 的 measure 和 layout 可能执行多次（如父容器需要多次测量才能确定最终大小）。"
+          },
+          {
+            id: "p11-view-c1",
+            type: "code",
+            question: "以下自定义 View 代码设置 wrap_content 时无效（表现为 match_parent），请找出原因：",
+            code: `class CircleView @JvmOverloads constructor(
+    context: Context, attrs: AttributeSet? = null, defStyle: Int = 0
+) : View(context, attrs, defStyle) {
+
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.RED
+        style = Paint.Style.FILL
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        val radius = Math.min(width, height) / 2f
+        canvas.drawCircle(width / 2f, height / 2f, radius, paint)
+    }
+}`,
+            options: [
+              "drawCircle 的参数计算有误",
+              "没有重写 onMeasure 方法处理 wrap_content，View 默认在 AT_MOST 模式下使用父容器传入的可用大小，导致 wrap_content 与 match_parent 表现相同",
+              "Paint 应该设置为 STROKE 而不是 FILL",
+              "CircleView 不需要构造函数参数"
+            ],
+            answer: 1,
+            explain:
+              "View 的默认 onMeasure 实现中，当 MeasureSpec 为 AT_MOST（即 wrap_content）时，会将 size 设置为父容器允许的最大值，导致 wrap_content 与 match_parent 表现相同。修复方法：重写 onMeasure，在 AT_MOST 模式下设置一个默认的内部尺寸（如 200px），并在 EXACTLY 模式下使用父容器的精确值。代码示例：\n```kotlin\noverride fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {\n    val w = resolveSize(200, widthMeasureSpec)\n    val h = resolveSize(200, heightMeasureSpec)\n    setMeasuredDimension(w, h)\n}\n```\nresolveSize 会自动处理 EXACTLY/AT_MOST/UNSPECIFIED 三种模式。"
+          },
+          {
+            id: "p11-view-t1",
+            type: "task",
+            question: "实现一个自定义的FlowLayout（流式布局）",
+            desc: "实现一个自定义 ViewGroup——FlowLayout，子 View 按行排列，一行放不下时自动换行（类似 CSS 的 flex-wrap）。要求：(1) 重写 onMeasure，遍历子 View 测量并根据可用宽度计算换行，正确处理 padding；(2) 重写 onLayout，根据 onMeasure 中记录的行信息对子 View 进行定位；(3) 支持 wrap_content 和 match_parent；(4) 支持子 View 的 margin；(5) 添加自定义属性 flow_horizontalSpacing 和 flow_verticalSpacing（通过 declare-styleable）。",
+            criteria: [
+              "onMeasure 正确处理换行逻辑和自身尺寸",
+              "onLayout 正确定位每行每个子 View",
+              "wrap_content 时尺寸刚好包裹内容",
+              "子 View 的 margin 正确生效",
+              "自定义属性可通过 XML 配置"
+            ]
+          },
+          {
+            id: "p11-view-o1",
+            type: "open",
+            question: "请解释 Android 中 View 的事件分发机制。dispatchTouchEvent、onInterceptTouchEvent 和 onTouchEvent 三者的关系是什么？如何解决滑动冲突？",
+            ref: "**事件分发流程**：\n\nTouch 事件从 Activity → Window → 顶级 ViewGroup → 子 View 逐层传递：\n\n1. **dispatchTouchEvent**：事件分发入口\n   - ViewGroup：决定是自己处理还是分发给子 View\n   - 返回 true：事件被消费，不再传递\n   - 返回 false：事件回传给父 View 的 onTouchEvent\n\n2. **onInterceptTouchEvent**（仅 ViewGroup 有）：\n   - 决定是否拦截事件不让子 View 处理\n   - 返回 true：拦截，交给自己的 onTouchEvent 处理\n   - 返回 false：不拦截，继续传给子 View\n\n3. **onTouchEvent**：\n   - 处理触摸事件\n   - 返回 true：消费事件\n   - 返回 false：不消费，事件回传给父 View\n\n**核心规则**：\n- 事件先传给子 View，子 View 不消费再回传给父 View（类似责任链模式）\n- 一旦某个 View 的 onTouchEvent 返回 true，后续 MOVE/UP 事件都直接给它\n- requestDisallowInterceptTouchEvent 可以禁止父 View 拦截\n\n**滑动冲突解决**：\n1. **外部拦截法**：在父 ViewGroup 的 onInterceptTouchEvent 中，根据条件决定是否拦截（如水平滑动时拦截、垂直滑动时不拦截）\n2. **内部拦截法**：在子 View 的 onTouchEvent 中，根据条件调用 parent.requestDisallowInterceptTouchEvent(true) 阻止父 View 拦截\n3. 常见场景：ViewPager 嵌套 ScrollView、RecyclerView 嵌套 RecyclerView\n4. 判断滑动方向：根据 dx/dy 的绝对值之比判断是水平还是垂直滑动"
+          }
+        ]
+      },
+      {
+        id: "android-ipc",
+        title: "IPC 与多进程",
+        items: [
+          {
+            id: "p11-ipc-q1",
+            type: "quiz",
+            question: "Android 中 AIDL 和 Messenger 的核心区别是什么？",
+            options: [
+              "AIDL 和 Messenger 功能完全相同，只是 API 不同",
+              "AIDL 支持跨进程调用任意方法（可定义丰富接口），适合复杂 IPC；Messenger 基于 Message 串行处理，只能单向传递消息，适合简单通信",
+              "Messenger 性能比 AIDL 更好",
+              "AIDL 只能用于同一应用内的多进程通信"
+            ],
+            answer: 1,
+            explain:
+              "AIDL（Android Interface Definition Language）：定义跨进程接口，支持任意方法调用、多种参数类型（包括 Parcelable）、同步和异步调用。适合复杂的跨进程交互（如 Service 与多个 Client 交互）。底层使用 Binder 机制。\n\nMessenger：基于 AIDL 的简化封装，内部使用一个 Handler 串行处理 Message。只能传递 Message 对象，不支持直接调用方法。优点是线程安全（串行处理）、使用简单。适合低频的简单消息传递。\n\n选择原则：需要调用多方法、传复杂对象用 AIDL；只需简单消息传递用 Messenger。两者底层都是 Binder。"
+          },
+          {
+            id: "p11-ipc-q2",
+            type: "quiz",
+            question: "Android 中使用多进程（android:process）时，会带来哪些问题？",
+            options: [
+              "多进程没有任何副作用，只是性能更好",
+              "多进程会导致：Application 多次创建、静态成员不共享、SharedPreferences 不支持多进程并发写入、内存泄漏风险增加",
+              "多进程只是内存占用增加，其他没有影响",
+              "只有 Service 才能使用多进程，Activity 不行"
+            ],
+            answer: 1,
+            explain:
+              "Android 多进程的副作用：\n(1) **Application 多次创建**：每个进程启动时都会创建 Application 实例，onCreate 被多次调用，需要根据进程名做初始化区分。\n(2) **静态成员不共享**：不同进程有独立的虚拟机实例，静态变量各自独立，修改互不影响。\n(3) **SharedPreferences 不安全**：SP 的多进程模式（MODE_MULTI_PROCESS）已废弃，并发写入可能导致数据丢失。应使用 ContentProvider 或 MMKV 替代。\n(4) **内存翻倍**：每个进程有独立的堆内存，Application 级资源被重复加载。\n(5) **组件通信复杂**：跨进程需要使用 Binder/AIDL/Messenger/ContentProvider/Broadcast。\n\n多进程适用于：WebView 独立进程（防止内存泄漏导致主进程崩溃）、推送服务进程、后台音乐播放进程等。"
+          },
+          {
+            id: "p11-ipc-t1",
+            type: "task",
+            question: "使用 AIDL 实现跨进程通信",
+            desc: "实现一个跨进程的「图书管理服务」：(1) 服务端：RemoteBookService 运行在独立进程，提供 addBook、getBookList、registerListener（注册回调）、unregisterListener 方法；(2) 客户端：绑定服务后调用上述方法，实时显示图书列表变化；(3) Book 类实现 Parcelable；(4) 使用 AIDL 定义接口 IBookManager 和 IOnNewBookAddedListener；(5) 处理 RemoteException 和 Service 断开重连逻辑。",
+            criteria: [
+              "AIDL 接口正确定义，包含基本方法和回调注册",
+              "Book 类正确实现 Parcelable",
+              "客户端绑定服务并成功调用远程方法",
+              "回调通知正常工作（新书添加时客户端实时更新）",
+              "处理了 Service 意外断开的重连逻辑"
+            ]
+          },
+          {
+            id: "p11-ipc-o1",
+            type: "open",
+            question: "请深入解释 Android Binder 机制。为什么 Android 选择 Binder 而不是传统的 Socket/管道/共享内存作为主要 IPC 方式？Binder 的内存映射是如何工作的？",
+            ref: "**Binder 为什么优于传统 IPC**：\n\n1. **性能**：Binder 只需一次拷贝（发送方→内核缓冲区→接收方通过 mmap 直接访问），而 Socket/管道需要两次拷贝（发送方→内核→接收方）。共享内存零拷贝但缺乏同步机制。\n\n2. **安全性**：Binder 在内核中为每个进程维护 UID/PID，接收方可以验证调用者身份。Socket/管道无法可靠验证对方身份。\n\n3. **易用性**：Binder 提供面向对象的接口定义（AIDL），方法调用像本地调用一样自然。Socket 是字节流，需要自行解析协议。\n\n4. **C/S 架构**：Binder 天然支持 Client-Server 模式，ServiceManager 作为命名服务管理 Binder 引用。\n\n**Binder 内存映射原理**：\n\n1. **mmap 映射**：进程打开 /dev/binder 设备后，调用 mmap() 将一块物理内存同时映射到内核空间和用户空间\n2. **一次拷贝**：发送方调用 ioctl(BINDER_WRITE_READ)，将数据从用户空间拷贝到内核的 binder 缓冲区（唯一一次拷贝）\n3. **零拷贝读取**：接收方因为 mmap 映射，可以直接在用户空间访问内核缓冲区的数据，无需再次拷贝\n4. **内存限制**：每个进程的 mmap 映射大小通常为 1MB-8MB，所以 Binder 事务有大小限制（异步事务约 1MB，同步事务更小）\n5. **释放**：接收方处理完后通知内核释放缓冲区\n\n**Binder 通信流程**：Client → Binder Proxy（BpBinder）→ 内核 Binder 驱动 → Binder Stub（BBinder）→ Server → 原路返回结果"
+          }
+        ]
+      },
+      {
+        id: "android-compose",
+        title: "Jetpack Compose",
+        items: [
+          {
+            id: "p11-compose-q1",
+            type: "quiz",
+            question: "Jetpack Compose 中的「重组（Recomposition）」是什么？如何避免不必要的重组？",
+            options: [
+              "重组就是 Activity 重建，和配置变更一样",
+              "重组是 Compose 在状态变化时重新执行可组合函数以更新 UI；避免不必要重组的方法包括：remember 缓存计算结果、derivedStateOf 减少通知频率、LazyColumn 使用 key 标识项、避免 lambda 在重组时创建新实例",
+              "重组可以完全避免，只要使用 setState 正确",
+              "重组只会影响整个页面，不能局部重组"
+            ],
+            answer: 1,
+            explain:
+              "重组（Recomposition）是 Compose 的核心机制——当观察到的 State 变化时，Compose 会重新执行依赖该 State 的可组合函数，生成新的 UI 描述，然后智能地只更新变化的部分。\n\n避免不必要重组的关键技巧：\n(1) **remember**：缓存计算结果，避免每次重组重新计算\n(2) **derivedStateOf**：只在派生状态真正变化时触发重组\n(3) **key**：LazyColumn 中使用唯一 key 标识列表项，避免项移动时全量重组\n(4) **Lambda 稳定性**：使用 remember 保存 lambda 或使用无状态 lambda，避免每次重组创建新实例导致子组件重组\n(5) **@Stable / @Immutable**：标记数据类为稳定类型，帮助 Compose 跳过不可变参数的重组\n(6) **状态下沉**：将状态尽可能下沉到需要它的最小组件中"
+          },
+          {
+            id: "p11-compose-q2",
+            type: "quiz",
+            question: "Compose 中 `remember` 和 `rememberSaveable` 的区别是什么？",
+            options: [
+              "两者功能完全相同",
+              "remember 在重组时保持值但在配置变更（如旋转屏幕）时会丢失；rememberSaveable 在配置变更时也能保持值，因为它将数据保存到了 SavedInstanceState 中",
+              "rememberSaveable 比 remember 性能更好",
+              "remember 只能用在 Composable 函数中，rememberSaveable 可以在任何地方使用"
+            ],
+            answer: 1,
+            explain:
+              "remember：在 Composable 函数的重组过程中保持值（存在 Composition 中），但当 Activity 因配置变更而重建时，整个 Composition 被销毁并重新创建，remember 的值会丢失。\n\nrememberSaveable：在 remember 的基础上，将值通过 Bundle 保存到 SavedInstanceState 中，当 Activity 因配置变更重建后可以恢复。支持基本类型、Parcelable、Serializable 等 Bundle 支持的类型。对于自定义对象，需要提供 Saver。\n\n选择：纯 UI 临时状态（如滚动位置、展开/折叠）用 remember；需要跨配置变更保持的状态（如用户输入的文本、选中项）用 rememberSaveable。注意：两者都不能跨进程恢复（进程被杀后丢失），持久化数据应使用 DataStore/Room。"
+          },
+          {
+            id: "p11-compose-c1",
+            type: "code",
+            question: "以下 Compose 代码在列表滚动时出现卡顿，请找出原因并修复：",
+            code: `@Composable
+fun UserList(users: List<User>) {
+    LazyColumn {
+        items(users.size) { index ->
+            val user = users[index]
+            // 每次重组都创建新的 DateFormatter
+            val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val formattedDate = dateFormatter.format(user.joinDate)
+            
+            // 每次都创建新的 onClick lambda
+            Row(
+                modifier = Modifier.clickable {
+                    navigateToProfile(user.id)
+                }
+            ) {
+                Text(user.name)
+                Text(formattedDate)
+            }
+        }
+    }
+}`,
+            options: [
+              "LazyColumn 不支持点击事件",
+              "存在多个问题：index 方式缺少 key 导致列表增删时全量重组、每次重组创建 SimpleDateFormat 对象、clickable lambda 每次重组都创建新实例导致 Row 不必要的重组",
+              "Row 组件不支持 clickable 修饰符",
+              "SimpleDateFormat 是线程安全的所以没有问题"
+            ],
+            answer: 1,
+            explain:
+              "代码存在三个问题：\n(1) **缺少 key** — 使用 items(users.size) 而非 items(users, key = { it.id })，当列表增删项时 Compose 无法识别哪些项发生了变化，导致全量重组。应改为 items(users, key = { it.id }) { user -> ... }\n(2) **重复创建对象** — SimpleDateFormat 在每次重组时都创建新实例。应使用 remember 缓存：`val dateFormatter = remember { SimpleDateFormat(...) }`\n(3) **不稳定的 lambda** — clickable 中的 lambda 每次重组都创建新实例，导致 Row 的 modifier 变化触发子组件重组。应使用 remember 或将 lambda 提升为稳定引用。\n\n修复后代码片段：\n```kotlin\nitems(users, key = { it.id }) { user ->\n    val formatter = remember { SimpleDateFormat(\"yyyy-MM-dd\", Locale.getDefault()) }\n    val date = formatter.format(user.joinDate)\n    Row(modifier = Modifier.clickable { navigateToProfile(user.id) }) { ... }\n}\n```"
+          },
+          {
+            id: "p11-compose-t1",
+            type: "task",
+            question: "使用 Compose 实现一个完整的功能页面",
+            desc: "使用 Jetpack Compose 实现一个「GitHub 仓库搜索」页面：(1) 搜索栏（输入关键词，300ms 防抖触发搜索）；(2) 搜索结果列表（仓库名、描述、星数、语言标签，使用 LazyColumn + Coil 异步图片）；(3) 状态管理（Idle/Loading/Success/Error/Empty，使用 sealed class + viewModelScope + StateFlow）；(4) 分页加载（滚动到底部自动加载下一页）；(5) 收藏功能（使用 Room 本地存储，带收藏动画）；(6) 主题切换（亮色/暗色，使用 MaterialTheme）。",
+            criteria: [
+              "搜索防抖正确实现（LaunchedEffect + delay 或 debounce）",
+              "LazyColumn 使用 key 且滚动流畅",
+              "StateFlow 管理状态，UI 根据状态正确渲染",
+              "分页加载正常，无重复请求",
+              "Room 收藏数据和 Compose UI 正确同步",
+              "亮色/暗色主题切换正确"
+            ]
+          },
+          {
+            id: "p11-compose-o1",
+            type: "open",
+            question: "请对比 Jetpack Compose 和传统 Android View 体系的核心区别。Compose 的副作用（Side Effect）有哪些类型？分别适用于什么场景？",
+            ref: "**核心区别**：\n\n| 维度 | View 体系 | Compose |\n|------|----------|---------|\n| 范式 | 命令式（命令 UI 怎么变） | 声明式（描述 UI 是什么） |\n| 状态 | 分散在 View/ViewModel 中 | 单一数据源（State Hoisting） |\n| 更新 | 手动 findViewById + setText | 自动重组（State 变化驱动） |\n| 复用 | 自定义 View/ViewGroup | Composable 函数组合 |\n| 预览 | 需要 XML + 运行 | @Preview 注解即时预览 |\n| 测试 | 需要启动 Activity | 可独立测试 Composable |\n\n**Compose 副用（Side Effect）类型**：\n\n1. **LaunchedEffect**：当 key 变化时启动协程，离开 Composition 自动取消。适合：网络请求、动画、定时器等需要协程的异步操作。\n\n2. **rememberCoroutineScope**：获取 Composition 绑定的 CoroutineScope，可在非 Composable 上下文（如点击回调）中启动协程。\n\n3. **rememberUpdatedState**：保持对可变值的最新引用，避免 LaunchedEffect 中捕获旧值。适合：LaunchedEffect 长时间运行但需要访问最新状态。\n\n4. **DisposableEffect**：需要清理的副作用（类似 useEffect 的 cleanup）。适合：注册/反注册监听器、Observer 订阅管理。\n\n5. **SideEffect**：每次重组成功后执行，用于与非 Compose 代码同步状态。适合：上报分析事件、更新 ViewModel 状态。\n\n6. **produceState**：将非 Compose 状态源转为 Compose State。适合：Flow/LiveData → State 转换。\n\n7. **derivedStateOf**：从其他 State 派生新 State，只在结果变化时触发重组。适合：过滤/排序/计算等派生数据。\n\n**选择原则**：需要协程用 LaunchedEffect/rememberCoroutineScope；需要清理用 DisposableEffect；派生状态用 derivedStateOf；其他场景用 SideEffect 或 produceState。"
+          }
+        ]
+      },
+      {
+        id: "android-gradle",
+        title: "Gradle 构建体系",
+        items: [
+          {
+            id: "p11-gradle-q1",
+            type: "quiz",
+            question: "关于 Android Gradle 的 build variant（构建变体），以下说法正确的是？",
+            options: [
+              "build variant 只能有一个 flavor 和一个 build type",
+              "build variant = Product Flavor × Build Type，每个 variant 产生一个 APK；multi-flavor 维度可以组合出更多 variant（如 flavorDimensions: tier × env）",
+              "build type 和 product flavor 功能完全相同",
+              "每个 variant 必须有不同的 applicationId"
+            ],
+            answer: 1,
+            explain:
+              "Build Variant = Product Flavor × Build Type。Build Type 定义构建类型（debug/release，控制混淆、签名、调试等），Product Flavor 定义产品变体（free/paid、不同功能包、不同服务器环境）。两者组合产生所有可能的变体。例如 2 个 flavor（free/paid）× 2 个 build type（debug/release）= 4 个 variant。使用 flavorDimensions 可以支持多维 flavor：如 dimension1（free/paid）× dimension2（staging/prod）× build type（debug/release）= 8 个 variant。每个 variant 可以有独立的 applicationIdSuffix、versionNameSuffix 等配置。"
+          },
+          {
+            id: "p11-gradle-t1",
+            type: "task",
+            question: "配置多环境构建体系",
+            desc: "为一个中型项目配置完整的 Gradle 多环境构建体系：(1) 定义 3 个 build type（debug、staging、release），debug 使用 debug 签名 + 可调试，staging 使用测试签名 + ProGuard 规则，release 使用正式签名 + R8 混淆；(2) 定义 2 个 flavor dimension（tier: free/premium, env: dev/prod），共 4 个 flavor；(3) 为每个环境配置不同的 applicationIdSuffix、versionNameSuffix、BuildConfig 字段（如 BASE_URL）；(4) 配置 flavor 维度的源集目录（src/free、src/premium）；(5) 配置 release 签名（使用 keystore.properties 管理密钥信息）。",
+            criteria: [
+              "所有 build variant 配置正确（共 12 个 variant）",
+              "每个环境有独立的 BuildConfig.BASE_URL",
+              "flavor 源集目录结构正确",
+              "release 签名配置安全（密钥信息不在版本控制中）",
+              "ProGuard/R8 规则正确配置"
+            ]
+          },
+          {
+            id: "p11-gradle-o1",
+            type: "open",
+            question: "请解释 Android Gradle Plugin (AGP) 8.x 的主要变化，以及如何优化 Gradle 构建速度。Configuration Cache 和 Build Cache 的区别是什么？",
+            ref: "**AGP 8.x 主要变化**：\n1. **Namespace 替代 package**：build.gradle 中的 namespace 替代 AndroidManifest.xml 的 package 属性\n2. **非传递性 R 类**：默认启用 nonTransitiveRClass，模块只暴露自己的 R 类，减少编译依赖\n3. **BuildConfig 默认关闭**：需要显式 buildFeatures { buildConfig = true } 才生成 BuildConfig\n4. **Java 17 要求**：需要 JDK 17 运行 Gradle\n5. **PM 支持**：更好的 Kotlin KSP 替代 KAPT\n\n**构建速度优化**：\n1. **Gradle 配置**：org.gradle.parallel=true、org.gradle.caching=true、org.gradle.jvmargs=-Xmx4g\n2. **Configuration Cache**：缓存配置阶段的结果，后续构建跳过配置阶段\n3. **Build Cache**：缓存任务输出，相同输入的任务不重新执行\n4. **增量编译**：Kotlin/Java 增量编译只重新编译变化的文件\n5. **模块化**：拆分大模块为小模块，减少每次编译的范围\n6. **依赖优化**：使用 implementation 替代 api，减少编译传递\n\n**Configuration Cache vs Build Cache**：\n- Configuration Cache：缓存「配置阶段」（解析 build.gradle、计算 task graph），避免每次都执行配置脚本。是 Gradle 层面的优化。\n- Build Cache：缓存「执行阶段」的任务输出（如 .class 文件、.dex 文件），相同输入的任务直接使用缓存结果。是任务层面的优化。\n- 两者互补：Configuration Cache 加速配置，Build Cache 加速执行，一起使用效果最佳。"
+          }
+        ]
+      }
+    ]
+  },
+
+  // ─────────────────────────────────────────────
+  // Module 12: Android 系统版本与适配
+  // ─────────────────────────────────────────────
+  {
+    id: "p12",
+    title: "Android 系统版本与适配",
+    level: 12,
+    color: "#06b6d4",
+    builtin: true,
+    topics: [
+      {
+        id: "version-overview",
+        title: "Android 版本演进概览",
+        items: [
+          {
+            id: "p12-ver-q1",
+            type: "quiz",
+            question: "Android 5.0（Lollipop）引入的哪项架构变更对应用开发影响最为深远？",
+            options: [
+              "引入了 Kotlin 语言支持",
+              "引入了 Material Design 设计语言和 ART 运行时替代 Dalvik，彻底移除 JIT 编译，改为 AOT 编译，显著提升运行性能",
+              "引入了 Jetpack Compose",
+              "引入了 Gradle 构建系统"
+            ],
+            answer: 1,
+            explain:
+              "Android 5.0 Lollipop 带来了两个重大变更：(1) **ART 替代 Dalvik** — ART 采用 AOT（Ahead-Of-Time）编译，在安装时将 dex 编译为本地机器码，运行时无需 JIT，大幅提升启动速度和运行性能，同时引入了 64 位支持。(2) **Material Design** — 全新的视觉设计语言，引入了 elevation（阴影层次）、ripple（水波纹）、转场动画等概念。此外 Lollipop 还引入了 JobScheduler（后台任务调度）、DocumentFile（SAF 文档访问）等 API。"
+          },
+          {
+            id: "p12-ver-q2",
+            type: "quiz",
+            question: "从 Android 8.0（Oreo）开始，以下哪个行为受到了严格限制？",
+            options: [
+              "前台 Service 的使用",
+              "后台 Service 和隐式广播受到严格限制，应用在后台时无法自由启动 Service，静态注册的广播接收器大部分被禁用",
+              "所有网络请求都必须使用 HTTPS",
+              "不再支持 Java 语言开发"
+            ],
+            answer: 1,
+            explain:
+              "Android 8.0 开始了系统性的后台执行限制：(1) **后台 Service 限制** — 处于后台的应用无法使用 startService() 启动 Service，必须使用 startForegroundService() 并在 5 秒内调用 startForeground() 显示通知，否则抛出 ANR。(2) **隐式广播限制** — 大部分系统广播（如 BOOT_COMPLETED 除外）不再能通过 AndroidManifest 静态注册接收，必须使用 Context.registerReceiver() 动态注册。(3) **后台位置限制** — 后台应用获取位置信息的频率被降低。这些限制的目的是减少后台应用对系统资源的消耗，提升电池续航。"
+          },
+          {
+            id: "p12-ver-t1",
+            type: "task",
+            question: "梳理 Android 版本关键变更时间线",
+            desc: "制作一个 Android 版本关键变更的思维导图或文档，涵盖 Android 5.0 到 Android 15 的每个大版本（选择对开发者影响最大的变更），每个版本列出 3-5 个关键 API 变更或行为限制。重点标注「破坏性变更」（如需要适配才能正常运行的变化）和「新增能力」（如新功能、新 API）。",
+            criteria: [
+              "覆盖 Android 5.0 ~ 15 的每个大版本",
+              "每个版本至少 3 个关键变更",
+              "破坏性变更和新增能力有明确标注",
+              "关注对开发者实际影响最大的变更（如权限、后台限制、存储等）"
+            ]
+          },
+          {
+            id: "p12-ver-o1",
+            type: "open",
+            question: "Android 系统版本碎片化是长期存在的问题。请分析：(1) 为什么 Android 相比 iOS 碎片化更严重？(2) Google 采取了哪些措施来缓解碎片化？(3) 作为应用开发者，如何制定合理的 minSdkVersion 和 targetSdkVersion 策略？",
+            ref: "**碎片化原因**：(1) OEM 厂商众多（三星、小米、OPPO 等），各自定制 ROM，系统更新需要厂商适配推送；(2) 芯片厂商的驱动更新滞后；(3) 运营商参与审核（部分市场）；(4) 设备种类繁多，低价设备厂商缺乏更新动力；(5) 用户可能拒绝系统更新。\n\n**Google 的缓解措施**：(1) Project Treble（Android 8.0）— 将 Android 框架与厂商 HAL 分离，使系统更新不再依赖芯片厂商驱动更新；(2) Project Mainline（Android 10）— 将核心系统组件模块化（APEX 模块），可通过 Google Play 系统更新推送，无需完整 OTA；(3) GMS 认证要求 — 强制要求预装 Google 服务的设备必须满足 CDD 兼容性要求；(4) Play Console 的 targetSdkVersion 要求 — 强制要求上架应用达到指定 targetSdkVersion；(5) Android Go — 为低端设备提供精简版系统。\n\n**minSdkVersion 策略**：根据目标市场的设备分布决定。一般原则：(1) 跟随主流 — 覆盖 90%+ 的活跃设备；(2) 参考Android Studio 的推荐值；(3) B2B 应用可根据客户设备决定；(4) 每年提升一次，通常在主要版本发布 2-3 年后。(2024 年推荐 minSdk 24+)\n\n**targetSdkVersion 策略**：(1) 必须满足 Google Play 的强制要求（每年提升）；(2) 新项目直接设为最新稳定版；(3) 老项目每年至少提升一次；(4) targetSdk 提升前必须测试所有行为变更的适配。"
+          }
+        ]
+      },
+      {
+        id: "permission-evolution",
+        title: "权限体系演进",
+        items: [
+          {
+            id: "p12-perm-q1",
+            type: "quiz",
+            question: "Android 6.0 引入的运行时权限模型与之前的安装时权限模型的核心区别是什么？",
+            options: [
+              "运行时权限让用户在每次使用功能时都要授权",
+              "安装时权限在安装时一次性授予所有声明权限；运行时权限将危险权限（如位置、相机、存储）分为安装时自动授予和运行时用户确认两类，危险权限必须在使用时弹窗请求用户授权",
+              "运行时权限不再需要在 AndroidManifest 中声明",
+              "所有权限都变成了可选的，用户可以拒绝任何权限"
+            ],
+            answer: 1,
+            explain:
+              "Android 6.0 将权限分为两类：(1) **普通权限（Normal Permissions）** — 如 INTERNET、VIBRATE、SET_WALLPAPER，安装时自动授予，无需用户确认。(2) **危险权限（Dangerous Permissions）** — 如 CAMERA、LOCATION、READ_CONTACTS，必须在运行时通过 requestPermissions() 弹窗请求用户授权，用户可以拒绝。危险权限按权限组（Permission Group）归类，同组内授权一个等于授权整个组（Android 11 后此行为已改变）。用户还可以在设置中随时撤销已授权的权限。这个模型要求开发者必须处理「权限被拒绝」的场景，提供降级功能或引导用户授权。"
+          },
+          {
+            id: "p12-perm-q2",
+            type: "quiz",
+            question: "关于 Android 13（API 33）的通知权限变更，以下说法正确的是？",
+            options: [
+              "Android 13 取消了所有通知功能",
+              "Android 13 新增了 POST_NOTIFICATIONS 运行时权限，应用必须先获得用户授权才能发送通知，否则通知会被静默丢弃",
+              "通知权限属于普通权限，自动授予",
+              "只有系统应用才能发送通知"
+            ],
+            answer: 1,
+            explain:
+              "Android 13 引入了 POST_NOTIFICATIONS（危险权限），所有发送通知的应用必须在 AndroidManifest 声明该权限，并在运行时请求用户授权。如果用户拒绝或未授权，应用发出的通知会被系统静默丢弃，不会显示。首次请求时会弹出系统权限对话框；如果用户选择「不再询问」并拒绝，后续需要引导用户到系统设置页面手动开启。这要求开发者必须：(1) 在合适时机请求通知权限（如用户点击「开启通知」按钮时）；(2) 处理权限拒绝的降级场景；(3) 使用 shouldShowRequestPermissionRationale 判断是否需要展示权限说明。"
+          },
+          {
+            id: "p12-perm-c1",
+            type: "code",
+            question: "以下权限请求代码在 Android 11+ 上行为异常（第二次请求不弹窗），请找出原因：",
+            code: `// 在 Activity 中请求位置权限
+if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+        != PackageManager.PERMISSION_GRANTED) {
+    // 直接请求，没有检查 shouldShowRequestPermissionRationale
+    requestPermissions(
+        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+        REQUEST_CODE_LOCATION
+    )
+}
+
+override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
+    grantResults: IntArray) {
+    if (requestCode == REQUEST_CODE_LOCATION) {
+        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            // 权限授予
+        } else {
+            // 权限拒绝，直接再次请求
+            requestPermissions(permissions, REQUEST_CODE_LOCATION)
+        }
+    }
+}`,
+            options: [
+              "requestPermissions 方法在 Android 11 上已被废弃",
+              "Android 11 引入了「几次拒绝后永久拒绝」机制：用户拒绝两次后，系统不再弹出权限对话框，直接返回 DENIED，必须引导用户到设置页面手动开启",
+              "onRequestPermissionsResult 在 Android 11 上不再被调用",
+              "位置权限在 Android 11 上不再需要请求"
+            ],
+            answer: 1,
+            explain:
+              "Android 11 的新行为：如果用户在权限对话框中点击了两次「拒绝」（包括选择「仅限本次」后再次请求又被拒绝），系统会将该权限标记为「永久拒绝」。此后无论调用多少次 requestPermissions()，系统都不会再弹出权限对话框，而是直接在 onRequestPermissionsResult 中返回 DENIED。\n\n正确处理方式：(1) 使用 shouldShowRequestPermissionRationale() 判断——如果返回 false 且权限未授予，说明用户已永久拒绝；(2) 此时需要显示一个对话框解释为什么需要该权限，并提供一个按钮跳转到应用设置页面（Settings.ACTION_APPLICATION_DETAILS_SETTINGS）；(3) 在 onActivityResult 中检查用户是否手动开启了权限。\n\n推荐使用 Activity Result API（registerForActivityResult）替代旧的 requestPermissions/onRequestPermissionsResult。"
+          },
+          {
+            id: "p12-perm-t1",
+            type: "task",
+            question: "实现一个完善的权限请求框架",
+            desc: "实现一个权限请求框架，覆盖以下场景：(1) 首次请求——弹出系统权限对话框；(2) 用户拒绝后——展示权限说明（shouldShowRequestPermissionRationale），解释为什么需要该权限后再次请求；(3) 永久拒绝（Android 11+）——引导用户到应用设置页面手动开启；(4) 多权限请求——同时请求位置和相机权限，分别处理各权限结果；(5) 使用 Activity Result API（registerForActivityResult）替代旧的 requestPermissions；(6) 封装为可复用的 PermissionHelper 工具类。",
+            criteria: [
+              "三种权限状态（授予/拒绝/永久拒绝）正确区分和处理",
+              "shouldShowRequestPermissionRationale 逻辑正确",
+              "永久拒绝时引导跳转设置页面",
+              "多权限请求结果逐一处理",
+              "使用现代 Activity Result API"
+            ]
+          }
+        ]
+      },
+      {
+        id: "storage-evolution",
+        title: "存储访问演进",
+        items: [
+          {
+            id: "p12-store-q1",
+            type: "quiz",
+            question: "Android 10 引入的「分区存储（Scoped Storage）」的核心变化是什么？",
+            options: [
+              "完全禁止应用访问任何外部存储",
+              "应用只能访问自己专属目录（getExternalFilesDir）和用户通过 SAF 选择的文件，不再能通过文件路径自由读写公共目录（如 DCIM、Downloads）",
+              "分区存储只影响 SD 卡，不影响内部存储",
+              "分区存储只对 targetSdkVersion >= 29 的应用生效，其他应用不受影响"
+            ],
+            answer: 1,
+            explain:
+              "Scoped Storage 的核心变化：(1) **私有目录无限制** — 应用在自己的专属目录（getExternalFilesDir / getExternalCacheDir）中可以自由读写，无需权限。(2) **公共目录受限** — 不再能通过文件路径直接读写 DCIM、Pictures、Downloads 等公共目录，必须通过 MediaStore API（读写媒体文件）或 Storage Access Framework / SAF（用户选择文件）。(3) **READ_EXTERNAL_STORAGE 失效** — Android 13 后该权限不再有任何效果，被细分为 READ_MEDIA_IMAGES、READ_MEDIA_VIDEO、READ_MEDIA_AUDIO。(4) **媒体文件归属** — 应用只能修改/删除自己创建的媒体文件，修改其他应用的媒体文件需要用户确认。过渡策略：Android 10 可通过 requestLegacyExternalStorage=true 临时兼容，Android 11 强制启用。"
+          },
+          {
+            id: "p12-store-c1",
+            type: "code",
+            question: "以下代码在 Android 11+ 上无法访问公共目录中的图片，请找出原因并修复：",
+            code: `// 尝试读取外部存储的图片
+fun loadProfileImage(context: Context, imagePath: String): Bitmap? {
+    // 使用文件路径直接读取
+    val file = File(imagePath)  // 如 /storage/emulated/0/DCIM/photo.jpg
+    if (!file.exists()) return null
+    
+    return BitmapFactory.decodeFile(file.absolutePath)
+}
+
+// 请求权限
+fun requestStoragePermission(activity: Activity) {
+    if (ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE)
+            != PackageManager.PERMISSION_GRANTED) {
+        activity.requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 100)
+    }
+}`,
+            options: [
+              "BitmapFactory.decodeFile 在 Android 11 上已被废弃",
+              "Android 11 强制启用分区存储，不能通过文件路径直接访问公共目录，应使用 MediaStore API 查询图片的 Content URI，再通过 ContentResolver 打开 InputStream 解码；READ_EXTERNAL_STORAGE 在 Android 13+ 已失效，应使用 READ_MEDIA_IMAGES",
+              "文件路径格式不正确，应该使用 Environment.getExternalStorageDirectory()",
+              "只需添加 WRITE_EXTERNAL_STORAGE 权限即可"
+            ],
+            answer: 1,
+            explain:
+              "Android 11 强制启用分区存储：(1) 不能再通过 File 路径直接访问公共目录（如 /storage/emulated/0/DCIM/），即使有 READ_EXTERNAL_STORAGE 权限也会返回文件不存在或 Permission Denied。(2) 正确做法是使用 MediaStore API：\n```kotlin\nval projection = arrayOf(MediaStore.Images.Media._ID)\nval selection = \"${MediaStore.Images.Media.DISPLAY_NAME} = ?\"\nval selectionArgs = arrayOf(\"photo.jpg\")\nval cursor = contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, null)\ncursor?.use {\n    if (it.moveToFirst()) {\n        val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Images.Media._ID))\n        val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)\n        val bitmap = BitmapFactory.decodeStream(contentResolver.openInputStream(uri))\n    }\n}\n```\n(3) Android 13+ 应使用 READ_MEDIA_IMAGES 替代 READ_EXTERNAL_STORAGE。"
+          },
+          {
+            id: "p12-store-t1",
+            type: "task",
+            question: "实现兼容多版本的照片选择与保存功能",
+            desc: "实现一个照片功能模块，要求：(1) 选择照片——Android 13+ 使用 Photo Picker（ActivityResultContracts.PickVisualMedia），Android 10-12 使用 SAF（ACTION_OPEN_DOCUMENT），Android 9 及以下使用 MediaStore 查询 + 权限请求；(2) 保存照片到公共目录——使用 MediaStore.insert() 写入 Pictures 目录，兼容 Android 10+ 的分区存储；(3) 删除自己保存的照片——使用 MediaStore.delete() 或 ContentResolver.delete()；(4) 处理 Android 14 的新限制：部分照片/视频的权限需要用户逐个授权（READ_MEDIA_VISUAL_USER_SELECTED）。",
+            criteria: [
+              "三种 Android 版本的图片选择方案正确实现和兼容",
+              "MediaStore 保存照片到公共目录正确实现",
+              "Android 14 的部分媒体权限正确处理",
+              "权限请求和降级逻辑完善",
+              "代码有清晰的版本兼容注释"
+            ]
+          },
+          {
+            id: "p12-store-o1",
+            type: "open",
+            question: "请梳理 Android 存储访问从 Android 4.4 到 Android 14 的完整演进历程，包括每个版本的关键变化、对开发者的影响，以及迁移策略。",
+            ref: "**Android 4.4（KitKat）**：\n- 引入 Storage Access Framework（SAF），提供系统级文件选择器\n- READ_EXTERNAL_STORAGE 首次成为危险权限\n\n**Android 5.0-9.0**：\n- 基本存储模型不变\n- READ/WRITE_EXTERNAL_STORAGE 管理外部存储访问\n- 应用可以自由读写公共目录\n\n**Android 10（Q）**：\n- **引入分区存储（Scoped Storage）**\n- 应用只能自由访问 getExternalFilesDir() 专属目录\n- 公共目录（DCIM、Pictures 等）必须通过 MediaStore 或 SAF 访问\n- 提供 requestLegacyExternalStorage=true 临时兼容\n\n**Android 11（R）**：\n- **强制启用分区存储**，requestLegacyExternalStorage 不再生效\n- 引入 MANAGE_EXTERNAL_STORAGE 权限（仅文件管理器类应用可申请）\n- MediaStore 创建的文件其他应用默认不可见（IS_PENDING 标记）\n\n**Android 12（S）**：\n- 近乎不变的存储模型\n- 优化了 MediaStore 性能\n\n**Android 13（T）**：\n- **READ_EXTERNAL_STORAGE 失效**\n- 新增细粒度媒体权限：READ_MEDIA_IMAGES、READ_MEDIA_VIDEO、READ_MEDIA_AUDIO\n- 引入 Photo Picker（系统级图片/视频选择器）\n- 通知需要 POST_NOTIFICATIONS 权限\n\n**Android 14（U）**：\n- **部分媒体权限**（READ_MEDIA_VISUAL_USER_SELECTED）\n- 用户可以选择「选择照片和视频」而非授予全部媒体访问权限\n- 应用只能访问用户选中的照片/视频，其他返回空结果\n- 需要定期重新请求权限（用户可能随时修改选择）\n\n**迁移策略**：\n1. 使用 MediaStore API 替代 File 路径访问公共目录\n2. 使用 Content URI 替代 file:// URI\n3. 使用 SAF/Photo Picker 替代直接文件访问\n4. 应用私有数据存 getExternalFilesDir()\n5. 文件管理器类应用使用 MANAGE_EXTERNAL_STORAGE"
+          }
+        ]
+      },
+      {
+        id: "background-evolution",
+        title: "后台执行限制演进",
+        items: [
+          {
+            id: "p12-bg-q1",
+            type: "quiz",
+            question: "Android 12 引入的前台 Service 通知延迟（Foreground Service Launch Restrictions）的核心变化是什么？",
+            options: [
+              "完全禁止使用前台 Service",
+              "从后台启动前台 Service 受到严格限制，只有在特定场景（如高优先级 FCM、用户交互触发等）才允许从后台启动前台 Service，否则会抛出 ForegroundServiceStartNotAllowedException",
+              "前台 Service 不再需要显示通知",
+              "所有 Service 都必须改为 JobScheduler"
+            ],
+            answer: 1,
+            explain:
+              "Android 12 的前台 Service 限制：应用从后台（没有任何可见 Activity）启动前台 Service 时，系统会抛出 ForegroundServiceStartNotAllowedException，除非满足以下豁免条件之一：(1) 从高优先级 FCM 消息触发；(2) 从用户交互（如通知点击、Widget 点击）触发；(3) 从蓝牙/USB 等硬件事件触发；(4) 从系统广播（如 BOOT_COMPLETED）触发；(5) 应用是设备所有者或_profile 所有者。如果不满足豁免条件，应使用 WorkManager 替代前台 Service 处理后台任务。这个限制的目的是防止应用在后台偷偷运行长时间任务消耗电池。"
+          },
+          {
+            id: "p12-bg-q2",
+            type: "quiz",
+            question: "WorkManager 相比 JobScheduler 和 AlarmManager 的核心优势是什么？",
+            options: [
+              "WorkManager 的 API 更简单，只有一行代码",
+              "WorkManager 兼容 Android 6.0+（内部自动选择 JobScheduler/AlarmManager），支持约束条件（网络/电量/存储）、重试策略、链式任务、观察任务状态，且保证任务执行（即使应用退出或设备重启）",
+              "WorkManager 性能一定比 JobScheduler 更好",
+              "WorkManager 只能执行一次性任务，不能执行周期性任务"
+            ],
+            answer: 1,
+            explain:
+              "WorkManager 是 Jetpack 提供的后台任务调度库，核心优势：(1) **兼容性** — API 23+ 自动使用 JobScheduler，API 14-22 使用 AlarmManager + BroadcastReceiver，开发者无需关心平台差异。(2) **约束条件** — 支持网络类型（WiFi/计费/任意）、电量（不为低电量）、存储（空间充足）、设备空闲等约束，满足条件才执行。(3) **保证执行** — 任务持久化到数据库，应用退出或设备重启后仍会执行（不保证执行时间）。(4) **重试策略** — 支持 backoff criteria（指数退避或线性退避）。(5) **链式任务** — 支持任务依赖和并行组合。(6) **观察状态** — 通过 LiveData/Flow 观察 WorkInfo 状态变化。(7) **周期性任务** — 支持最小间隔 15 分钟的周期性执行。适用场景：数据同步、日志上传、缓存清理、定期备份等不需要立即执行的延迟任务。"
+          },
+          {
+            id: "p12-bg-t1",
+            type: "task",
+            question: "将后台任务迁移到 WorkManager",
+            desc: "将一个使用 Service + AlarmManager 实现的后台日志上传功能迁移到 WorkManager：(1) 创建 UploadLogWorker（继承 CoroutineWorker），在 doWork 中执行网络上传，返回 Result.success()/retry()/failure()；(2) 配置约束条件（需要网络连接、电量不为低）；(3) 配置重试策略（指数退避，初始 30 秒，最大 1 小时）；(4) 设置为 PeriodicWork（每 4 小时执行一次）；(5) 使用 UniqueWork 避免重复调度；(6) 在 UI 中观察 WorkInfo 状态并显示上次同步时间；(7) 处理 Android 12+ 的后台启动限制。",
+            criteria: [
+              "CoroutineWorker 正确实现，doWork 中使用协程发起网络请求",
+              "约束条件正确配置（网络 + 电量）",
+              "重试策略使用指数退避",
+              "PeriodicWork 间隔不小于 15 分钟",
+              "UniqueWork 确保不重复调度",
+              "WorkInfo 状态观察正确"
+            ]
+          },
+          {
+            id: "p12-bg-o1",
+            type: "open",
+            question: "请梳理 Android 后台执行限制从 Android 6.0 到 Android 14 的完整演进。每一步限制了什么？开发者应该使用什么替代方案？",
+            ref: "**Android 6.0（M）**：\n- 引入 Doze 模式：设备静止一段时间后进入低电耗模式，延迟后台任务、网络访问、Alarm\n- App Standby：不活跃应用限制网络访问频率\n- 替代方案：使用 JobScheduler 替代 AlarmManager 调度后台任务\n\n**Android 7.0（N）**：\n- Doze 模式增强：移动时也可进入轻度 Doze\n- 移除 CONNECTIVITY_ACTION、ACTION_NEW_PICTURE 等隐式广播\n- 替代方案：JobScheduler + ContentObserver\n\n**Android 8.0（O）**：\n- 后台 Service 限制：后台应用无法 startService，必须 startForegroundService + 5秒内 startForeground\n- 隐式广播进一步限制：大部分系统广播不再支持静态注册\n- 替代方案：JobScheduler、前台 Service、动态注册广播\n\n**Android 9.0（P）**：\n- 后台应用无法访问麦克风、相机、通话记录\n- App Standby Buckets：按使用频率将应用分为 Active/Working Set/Frequent/Rare，限制后台资源\n- 替代方案：前台 Service，减少后台监听需求\n\n**Android 10（Q）**：\n- 后台位置需要 ACCESS_BACKGROUND_LOCATION 权限\n- 后台启动 Activity 受限\n- 替代方案：高优先级 FCM + 全屏 Intent 通知\n\n**Android 11（R）**：\n- 后台位置权限需先获得前台位置权限\n- 包名可见性限制（需要 queries 声明）\n- 替代方案：WorkManager、前台 Service\n\n**Android 12（S）**：\n- 前台 Service 从后台启动受限（ForegroundServiceStartNotAllowedException）\n- 精确 Alarm 需要使用 SCHEDULE_EXACT_ALARM 权限（Android 13 改为 USE_EXACT_ALARM）\n- 前台 Service 通知延迟（10 秒后才显示）\n- 替代方案：WorkManager、高优先级 FCM\n\n**Android 13（T）**：\n- 后台任务进一步限制\n- 通知需要 POST_NOTIFICATIONS 权限\n- 替代方案：WorkManager + 前台 Service（仅在豁免场景）\n\n**Android 14（U）**：\n- 前台 Service 类型必须声明（foregroundServiceType）\n- 部分类型需要额外权限（如 health 需要 HIGH_SAMPLING_RATE_SENSORS）\n- 后台启动 Activity 更严格的限制\n- 替代方案：WorkManager 为主，前台 Service 仅在声明类型和权限后使用\n\n**总结趋势**：\n- 后台执行越来越受限，从「自由后台执行」到「必须有合理理由」\n- 核心替代方案：WorkManager（延迟任务）、前台 Service（用户可感知的任务）、高优先级 FCM（服务器推送）\n- 设计原则：能不做就不做，能延迟就延迟，必须做就告诉用户"
+          }
+        ]
+      }
+    ]
   }
 ];
